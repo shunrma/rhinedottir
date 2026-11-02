@@ -27,6 +27,7 @@ contextBridge.exposeInMainWorld("launcher", {
   dhDownload: (id, level) => call("dh:download", id, level),
   openLink: (url) => call("link:open", url),
   minimize: () => call("window:minimize"),
+  ready: () => call("window:ready"),
   close: () => call("window:close"),
   checkLauncherUpdate: () => call("launcher:check-update"),
   installLauncherUpdate: () => call("launcher:install-update"),

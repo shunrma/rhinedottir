@@ -165,7 +165,9 @@ function showBackground(src) {
   const layer = el("div", { className: "bg-layer" });
   if (src) layer.style.backgroundImage = `url("${src}")`;
   host.append(layer);
-  requestAnimationFrame(() => layer.classList.add("shown"));
+  // The very first background is already there when the window appears; later ones fade in.
+  if (host.children.length === 1) layer.classList.add("shown", "instant");
+  else requestAnimationFrame(() => layer.classList.add("shown"));
   setTimeout(() => {
     while (host.children.length > 1) host.firstElementChild.remove();
   }, 900);
@@ -410,15 +412,33 @@ async function boot() {
     state.selected = init.settings.lastPack;
     $("launcherVersion").textContent = `Version ${init.version}`;
     renderSettings();
-    $("splash").classList.add("done");
-    applyCatalog(await api.refresh());
+    const catalog = await api.refresh();
+    // Load the first background (and fonts) before the window is shown.
+    const pack = catalog.packs.find((p) => p.id === state.selected) || catalog.packs[0];
+    const first = pack && (pack.background || pack.gallery?.[0]);
+    await Promise.race([Promise.all([preload(first), document.fonts.ready]), wait(8000)]);
+    applyCatalog(catalog);
   } catch (e) {
     $("packName").textContent = "Couldn't load packs";
     toast(e.message, true);
     renderStart();
   }
   renderSettings();
-  $("splash").classList.add("done");
+  $("splash").classList.add("done", "instant");
+  // Two frames so the background is painted before the window appears.
+  requestAnimationFrame(() => requestAnimationFrame(() => api.ready().catch(() => {})));
+}
+
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function preload(src) {
+  if (!src) return Promise.resolve();
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => (img.decode ? img.decode().catch(() => {}).then(resolve) : resolve());
+    img.onerror = resolve;
+    img.src = src;
+  });
 }
 
 boot();

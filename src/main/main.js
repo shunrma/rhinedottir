@@ -286,9 +286,14 @@ function registerIpc() {
   });
 
   handle("window:minimize", () => win.minimize());
+  handle("window:ready", () => showWindow());
   handle("window:close", () => win.close());
   handle("launcher:check-update", () => updater.check());
   handle("launcher:install-update", () => updater.install());
+}
+
+function showWindow() {
+  if (win && !win.isDestroyed() && !win.isVisible()) win.show();
 }
 
 function createWindow() {
@@ -310,7 +315,9 @@ function createWindow() {
       sandbox: true,
     },
   });
-  win.once("ready-to-show", () => win.show());
+  // The window stays hidden until the page says its pack and background are loaded,
+  // so nobody sees a blank launcher. If that never comes, show it anyway.
+  win.once("ready-to-show", () => setTimeout(showWindow, 12000));
   // Links in posts open in the browser, never inside the launcher.
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https:\/\//i.test(url)) shell.openExternal(url);

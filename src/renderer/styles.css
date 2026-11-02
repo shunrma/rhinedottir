@@ -83,6 +83,7 @@ svg { width: 100%; height: 100%; display: block; }
 }
 
 .bg-layer.shown { opacity: 1; }
+.bg-layer.instant, .splash.instant { transition: none; animation: none; }
 
 
 .shade {
