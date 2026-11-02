@@ -1,6 +1,6 @@
 # Rhinedottir
 
-A Windows launcher for our Minecraft 1.21.1 NeoForge modpacks, plus the packs themselves.
+Rhine Launcher, a Windows launcher for our Minecraft 1.21.1 NeoForge modpacks, plus the packs themselves.
 
 - `src/`: the launcher (Electron).
 - `packs.json` and `packs/`: the packs the launcher shows and installs. See [packs/README.md](packs/README.md).
@@ -12,7 +12,7 @@ and updates itself from this repo's releases.
 ## Releasing a launcher update
 
 Bump `version` in `package.json` and push to `main`. The **Launcher** workflow builds
-`Rhinedottir-Setup-<version>.exe` and publishes it as release `v<version>`. Installed launchers find it in the
+`RhineLauncher-Setup-<version>.exe` and publishes it as release `v<version>`. Installed launchers find it in the
 background when they start and show a small "ready" popup; it installs on restart.
 
 For now builds have no Microsoft sign-in: players launch offline under their Windows user name.

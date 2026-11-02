@@ -194,6 +194,7 @@ function registerIpc() {
     const clean = {};
     if (patch.memoryGB !== undefined) clean.memoryGB = Math.min(32, Math.max(2, Number(patch.memoryGB) || 4));
     if (patch.lastPack !== undefined) clean.lastPack = String(patch.lastPack);
+    if (patch.sounds !== undefined) clean.sounds = !!patch.sounds;
     settings.set(clean);
     return publicSettings();
   });
@@ -300,7 +301,7 @@ function createWindow() {
     transparent: true,
     backgroundColor: "#00000000",
     show: false,
-    title: "Rhinedottir",
+    title: "Rhine Launcher",
     icon: path.join(__dirname, "..", "..", "build", "icon.png"),
     webPreferences: {
       preload: path.join(__dirname, "..", "preload.js"),

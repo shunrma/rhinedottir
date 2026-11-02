@@ -22,7 +22,7 @@ try {
       "nsis",
       "--publish",
       "never",
-      "-c.nsis.artifactName=Rhinedottir-Dev-Setup-${version}.${ext}",
+      "-c.nsis.artifactName=RhineLauncher-Dev-Setup-${version}.${ext}",
     ],
     { cwd: root, stdio: "inherit" },
   );

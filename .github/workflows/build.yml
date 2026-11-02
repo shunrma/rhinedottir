@@ -1,7 +1,7 @@
 name: Launcher
 
 # Builds the launcher on every push. When package.json has a version that hasn't been
-# released yet, it publishes Rhinedottir-Setup-<version>.exe as release v<version>,
+# released yet, it publishes RhineLauncher-Setup-<version>.exe as release v<version>,
 # which is where installed launchers look for updates.
 on:
   push:
@@ -33,9 +33,7 @@ jobs:
           v=$(node -p "require('./package.json').version")
           echo "version=$v" >> "$GITHUB_OUTPUT"
           if [ "${{ github.event_name }}" != "pull_request" ] && [ "${{ github.ref }}" = "refs/heads/main" ] && ! gh release view "v$v" >/dev/null 2>&1; then
-            echo "publish=always" >> "$GITHUB_OUTPUT"
-          else
-            echo "publish=never" >> "$GITHUB_OUTPUT"
+            echo "publish=true" >> "$GITHUB_OUTPUT"
           fi
       - name: Bake launcher settings
         shell: node {0}
@@ -43,10 +41,18 @@ jobs:
           // No sign-in until Mojang approves the app: players launch offline under their Windows name.
           require("fs").writeFileSync("src/main/build-config.json", JSON.stringify({ devMode: true }));
       - name: Build installer
-        run: npx electron-builder --win --publish ${{ steps.version.outputs.publish }}
+        run: npx electron-builder --win --publish never
+      - name: Publish release
+        if: steps.version.outputs.publish == 'true'
+        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+        run: |
+          v=${{ steps.version.outputs.version }}
+          gh release create "v$v" --target "$GITHUB_SHA" --title "Rhine Launcher $v" \
+            --notes "Rhine Launcher $v. Download RhineLauncher-Setup-$v.exe to install; installed launchers update themselves." \
+            dist/RhineLauncher-Setup-*.exe dist/RhineLauncher-Setup-*.exe.blockmap dist/latest.yml
       - uses: actions/upload-artifact@v4
         with:
-          name: Rhinedottir-Setup-${{ steps.version.outputs.version }}
+          name: RhineLauncher-Setup-${{ steps.version.outputs.version }}
           path: dist/*.exe

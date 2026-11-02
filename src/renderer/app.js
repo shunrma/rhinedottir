@@ -19,11 +19,12 @@ const LINK_ICONS = {
 // ---------- helpers ----------
 
 let toastTimer;
-function toast(message, isError = false) {
+function toast(message, isError = false, sound = isError ? "error" : "notify") {
   const el = $("toast");
   el.textContent = message;
   el.classList.toggle("error", isError);
   el.classList.remove("hidden");
+  sfx.play(sound);
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => el.classList.add("hidden"), isError ? 8000 : 4000);
 }
@@ -184,6 +185,8 @@ function renderSettings() {
   $("accountBtn").classList.toggle("primary", !state.account);
   $("memory").value = state.settings.memoryGB;
   $("memoryValue").textContent = `${state.settings.memoryGB} GB`;
+  $("sounds").checked = state.settings.sounds !== false;
+  sfx.setEnabled(state.settings.sounds !== false);
   document.querySelector(".github-setting").classList.toggle("baked", !!state.settings.githubKeyBaked);
   $("githubKeyStatus").textContent = state.settings.hasGitHubKey
     ? "Saved. The launcher downloads the mods from GitHub."
@@ -233,13 +236,14 @@ async function ensureSignedIn() {
 async function onStart() {
   const pack = currentPack();
   if (!pack || state.busy) return;
+  sfx.play("start");
   try {
     if (pack.status.state === "ready") {
       if (!(await ensureSignedIn())) return;
       updatePack(await api.play(pack.id));
     } else {
       updatePack(await api.install(pack.id));
-      toast(`${pack.name} is ready to play.`);
+      toast(`${pack.name} is ready to play.`, false, "success");
     }
   } catch (e) {
     toast(e.message, true);
@@ -335,6 +339,11 @@ function wire() {
     renderSettings();
   };
 
+  $("sounds").onchange = async (e) => {
+    state.settings = await api.setSettings({ sounds: e.target.checked });
+    renderSettings();
+  };
+
   $("githubKeyForm").onsubmit = async (e) => {
     e.preventDefault();
     const key = $("githubKey").value.trim();
@@ -382,8 +391,9 @@ function wire() {
   api.onGameCrashed(({ code }) => toast(`Minecraft closed with an error (code ${code}). Check the logs folder of the pack.`, true));
   // Found by the background check: a small popup, never in the way.
   api.onLauncherUpdate((info) => {
-    $("updatePopText").textContent = `Rhinedottir ${info.version} is ready`;
+    $("updatePopText").textContent = `Rhine Launcher ${info.version} is ready`;
     $("updatePop").classList.remove("hidden");
+    sfx.play("notify");
   });
   $("updateLater").onclick = () => $("updatePop").classList.add("hidden");
   $("updateRestart").onclick = () => api.installLauncherUpdate().catch((e) => toast(e.message, true));

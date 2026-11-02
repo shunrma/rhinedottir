@@ -22,7 +22,7 @@ async function stream(res, dest, onBytes) {
 // raw.githubusercontent.com, which isn't held to the API's 60-requests-an-hour limit.
 function createGitHub({ token, api = "https://api.github.com", raw = "https://raw.githubusercontent.com", ref = "main" }) {
   async function request(url, accept = "application/vnd.github+json") {
-    const headers = { Accept: accept, "X-GitHub-Api-Version": "2022-11-28", "User-Agent": "Rhinedottir" };
+    const headers = { Accept: accept, "X-GitHub-Api-Version": "2022-11-28", "User-Agent": "RhineLauncher" };
     if (token) headers.Authorization = `Bearer ${token}`;
     const res = await fetch(url.startsWith("http") ? url : api + url, { headers, redirect: "follow" });
     if (!res.ok) {

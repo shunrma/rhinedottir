@@ -1,8 +1,8 @@
 {
   "name": "rhinedottir",
-  "productName": "Rhinedottir",
+  "productName": "Rhine Launcher",
   "version": "0.2.0",
-  "description": "Launcher for the Rhinedottir modpacks",
+  "description": "Rhine Launcher, for the Rhinedottir modpacks",
   "main": "src/main/main.js",
   "private": true,
   "scripts": {
@@ -23,7 +23,7 @@
   "author": "shunrma",
   "build": {
     "appId": "com.shunrma.rhinedottir",
-    "productName": "Rhinedottir",
+    "productName": "Rhine Launcher",
     "files": [
       "src/**/*",
       "package.json"
@@ -41,7 +41,7 @@
     "nsis": {
       "oneClick": true,
       "perMachine": false,
-      "artifactName": "Rhinedottir-Setup-${version}.${ext}"
+      "artifactName": "RhineLauncher-Setup-${version}.${ext}"
     },
     "publish": [
       {

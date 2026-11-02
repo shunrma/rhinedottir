@@ -3,6 +3,8 @@ const path = require("node:path");
 
 const DEFAULTS = {
   memoryGB: 4,
+  // Subtle interface sounds.
+  sounds: true,
   // Pack shown when the launcher opens.
   lastPack: null,
 };

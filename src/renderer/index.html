@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' file: data:; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'">
-  <title>Rhinedottir</title>
+  <title>Rhine Launcher</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -87,6 +87,13 @@
             <span id="memoryValue"></span>
           </div>
         </div>
+        <div class="setting">
+          <div>
+            <div class="setting-title">Sounds</div>
+            <div class="setting-sub">Quiet clicks and chimes in the launcher</div>
+          </div>
+          <label class="switch"><input type="checkbox" id="sounds"><span></span></label>
+        </div>
         <div class="setting github-setting">
           <div>
             <div class="setting-title">GitHub key</div>
@@ -159,6 +166,7 @@
       <div class="spinner"></div>
     </div>
   </div>
+  <script src="sounds.js"></script>
   <script src="icons.js"></script>
   <script src="app.js"></script>
   <script src="distant-horizons.js"></script>
