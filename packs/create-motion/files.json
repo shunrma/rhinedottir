@@ -1,12 +1,12 @@
 {
   "pack": "create-motion",
-  "version": "0.2",
+  "version": "1.0",
   "minecraft": "1.21.1",
   "loader": {
     "type": "neoforge",
     "version": "21.1.264"
   },
-  "published": "2026-11-02T00:19:43.139Z",
+  "published": "2026-11-02T00:34:42.809Z",
   "files": [
     {
       "path": "config/create_connected-common.toml",
@@ -85,13 +85,13 @@
     },
     {
       "path": "mods/Shun's Additions 1.0.jar",
-      "sha1": "87d465de1181c4ab99b0b54ad1be99320ff96d34",
-      "size": 782795
+      "sha1": "9157a35b1af1cd353fdb52f69ec12bb78ad00747",
+      "size": 728801
     },
     {
       "path": "mods/Shun's Lib 1.0.jar",
-      "sha1": "a19833c232cfa016f360e7de2c8f2d3463f3cb05",
-      "size": 41453
+      "sha1": "d0e33660810f99934df8f7cbd47f7ecabcbfe120",
+      "size": 19224
     },
     {
       "path": "options.txt",
