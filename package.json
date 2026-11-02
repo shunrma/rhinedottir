@@ -1,7 +1,7 @@
 {
   "name": "rhinedottir",
   "productName": "Rhine Launcher",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "Rhine Launcher, for the Rhinedottir modpacks",
   "main": "src/main/main.js",
   "private": true,

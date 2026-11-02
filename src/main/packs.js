@@ -18,6 +18,23 @@ async function cachedImage(gh, repo, item, cacheDir) {
   return pathToFileURL(file).href;
 }
 
+// Fetches the first of `candidates` that exists, without the API, cached by its content.
+async function rawImage(gh, repo, candidates, cacheDir) {
+  for (const p of candidates) {
+    try {
+      const data = await gh.buffer(repo, p);
+      const hash = require("node:crypto").createHash("sha1").update(data).digest("hex");
+      const file = path.join(cacheDir, "images", `${hash}${path.extname(p).toLowerCase()}`);
+      fs.mkdirSync(path.dirname(file), { recursive: true });
+      if (!fs.existsSync(file)) fs.writeFileSync(file, data);
+      return pathToFileURL(file).href;
+    } catch (err) {
+      if (err.status !== 404) console.warn("couldn't load", p, err.message);
+    }
+  }
+  return null;
+}
+
 async function loadPosts(gh, repo, dir, list) {
   const items = list(dir).filter((i) => i.type === "file" && POST.test(i.name));
   items.sort((a, b) => b.name.localeCompare(a.name));
@@ -45,7 +62,10 @@ async function loadPack(gh, repo, id, cacheDir, options, list, previous) {
   ]);
   // Without the file list (GitHub's keyless limit), keep the images and posts from last time.
   if (!list) {
-    return { ...(await packInfo(id, pack, files, options)), ...pickMedia(previous) };
+    const media = pickMedia(previous);
+    media.icon ||= await rawImage(gh, repo, [`${base}/${pack.icon || "icon.png"}`], cacheDir);
+    media.background ||= await rawImage(gh, repo, ["jpg", "png", "webp", "jpeg"].map((e) => `${base}/background.${e}`), cacheDir);
+    return { ...(await packInfo(id, pack, files, options)), ...media };
   }
   const rootItems = list(base);
   const galleryItems = list(`${base}/gallery`);
