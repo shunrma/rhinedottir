@@ -1,0 +1,52 @@
+name: Launcher
+
+# Builds the launcher on every push. When package.json has a version that hasn't been
+# released yet, it publishes Rhinedottir-Setup-<version>.exe as release v<version>,
+# which is where installed launchers look for updates.
+on:
+  push:
+    branches: [main]
+    paths-ignore: ["packs/**", "packs.json"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Is this version released yet?
+        id: version
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v=$(node -p "require('./package.json').version")
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          if [ "${{ github.event_name }}" != "pull_request" ] && [ "${{ github.ref }}" = "refs/heads/main" ] && ! gh release view "v$v" >/dev/null 2>&1; then
+            echo "publish=always" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=never" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Bake launcher settings
+        shell: node {0}
+        run: |
+          // No sign-in until Mojang approves the app: players launch offline under their Windows name.
+          require("fs").writeFileSync("src/main/build-config.json", JSON.stringify({ devMode: true }));
+      - name: Build installer
+        run: npx electron-builder --win --publish ${{ steps.version.outputs.publish }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Rhinedottir-Setup-${{ steps.version.outputs.version }}
+          path: dist/*.exe

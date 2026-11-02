@@ -1,0 +1,31 @@
+{
+  "id": "create-motion",
+  "name": "Create Motion",
+  "description": "Light-weight Create Aeronautics modpack with Steam 'n' Rails.",
+  "minecraft": "1.21.1",
+  "loader": {
+    "type": "neoforge",
+    "version": "21.1.264"
+  },
+  "icon": "icon.png",
+  "include": [
+    "mods",
+    "config",
+    "defaultconfigs",
+    "kubejs",
+    "resourcepacks",
+    "shaderpacks"
+  ],
+  "exclude": [
+    "*.disabled",
+    "*.log",
+    "config/*.bak"
+  ],
+  "links": [
+    {
+      "type": "discord",
+      "label": "Discord",
+      "url": ""
+    }
+  ]
+}

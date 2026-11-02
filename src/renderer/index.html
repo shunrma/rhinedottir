@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' file: data:; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'">
+  <title>Rhinedottir</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="frame" id="frame">
+    <div class="background" id="background"></div>
+    <div class="shade"></div>
+
+    <!-- Drag area and window controls -->
+    <header class="topbar">
+      <div class="controls">
+        <button class="account-chip" id="accountChip" title="Account">
+          <span class="avatar" id="accountAvatar"></span>
+          <span id="accountChipName">Sign in</span>
+        </button>
+        <button class="icon-btn" id="settingsBtn" title="Settings">
+          <svg viewBox="0 0 24 24"><path d="M12 2.5l8.2 4.75v9.5L12 21.5l-8.2-4.75v-9.5z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+        </button>
+        <span class="divider"></span>
+        <button class="icon-btn" id="minBtn" title="Minimize"><svg viewBox="0 0 24 24"><path d="M6 12h12" stroke="currentColor" stroke-width="1.8"/></svg></button>
+        <button class="icon-btn close" id="closeBtn" title="Close"><svg viewBox="0 0 24 24"><path d="M7 7l10 10M17 7L7 17" stroke="currentColor" stroke-width="1.8"/></svg></button>
+      </div>
+    </header>
+
+    <!-- Right: links -->
+    <aside class="links" id="links"></aside>
+
+    <!-- Bottom left: the pack's name, lined up with the start button -->
+    <section class="brand" id="brand">
+      <h1 id="packName"></h1>
+    </section>
+
+    <!-- Bottom right: progress, start/update and the pack menu -->
+    <section class="dock" id="dock">
+      <div class="progress hidden" id="progress">
+        <div class="progress-label"><span id="progressLabel"></span><span id="progressPct"></span></div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      </div>
+      <div class="play-row">
+        <button class="start" id="startBtn">
+          <span class="start-icon"><svg viewBox="0 0 24 24"><path id="startIconPath" d="M8 5v14l11-7z" fill="currentColor"/></svg></span>
+          <span id="startLabel">Start Game</span>
+        </button>
+        <div class="menu-wrap">
+          <button class="menu-btn" id="menuBtn" title="Game options">
+            <svg viewBox="0 0 24 24"><path d="M5 7h14M5 12h14M5 17h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <span class="badge hidden" id="menuBadge"></span>
+          </button>
+          <div class="menu hidden" id="packMenu">
+            <button id="dhBtn">Distant Horizons</button>
+            <button data-folder="screenshots" data-label="Screenshots">Screenshots</button>
+            <button data-folder="resourcepacks" data-label="ResourcePacks">ResourcePacks</button>
+            <hr>
+            <button id="checkUpdatesBtn">Check for updates</button>
+            <button id="uninstallBtn" class="danger">Uninstall</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Launcher settings -->
+    <div class="overlay hidden" id="settingsOverlay">
+      <div class="dialog">
+        <div class="dialog-head">
+          <h2>Settings</h2>
+          <button class="icon-btn" data-close><svg viewBox="0 0 24 24"><path d="M7 7l10 10M17 7L7 17" stroke="currentColor" stroke-width="1.8"/></svg></button>
+        </div>
+        <div class="setting account-setting">
+          <div>
+            <div class="setting-title">Minecraft account</div>
+            <div class="setting-sub" id="accountName">Not signed in</div>
+          </div>
+          <button class="pill" id="accountBtn">Sign in</button>
+        </div>
+        <div class="setting">
+          <div>
+            <div class="setting-title">Memory</div>
+            <div class="setting-sub">How much RAM Minecraft may use</div>
+          </div>
+          <div class="slider">
+            <input type="range" id="memory" min="2" max="16" step="1">
+            <span id="memoryValue"></span>
+          </div>
+        </div>
+        <div class="setting github-setting">
+          <div>
+            <div class="setting-title">GitHub key</div>
+            <div class="setting-sub" id="githubKeyStatus">Lets the launcher download the mods from GitHub</div>
+          </div>
+          <form class="key-form" id="githubKeyForm">
+            <input type="password" id="githubKey" placeholder="Paste key" autocomplete="off" spellcheck="false">
+            <button class="pill primary" id="githubKeyBtn" type="submit">Save</button>
+          </form>
+        </div>
+        <div class="setting">
+          <div>
+            <div class="setting-title">Launcher</div>
+            <div class="setting-sub" id="launcherVersion"></div>
+          </div>
+          <button class="pill" id="launcherUpdateBtn">Check for update</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Distant Horizons download -->
+    <div class="overlay hidden" id="dhOverlay">
+      <div class="dialog dh-dialog">
+        <div class="dialog-head">
+          <div>
+            <h2>Distant Horizons</h2>
+            <div class="setting-sub">Download the server's pre-generated terrain so far-away land shows up straight away.</div>
+          </div>
+          <button class="icon-btn" data-close><svg viewBox="0 0 24 24"><path d="M7 7l10 10M17 7L7 17" stroke="currentColor" stroke-width="1.8"/></svg></button>
+        </div>
+        <div class="dh-levels" id="dhLevels" role="radiogroup" aria-label="Quality"></div>
+        <div class="dh-progress hidden" id="dhProgress">
+          <div class="progress-label"><span id="dhProgressLabel"></span><span id="dhProgressPct"></span></div>
+          <div class="progress-track"><div class="progress-fill" id="dhProgressFill"></div></div>
+        </div>
+        <div class="dh-actions">
+          <button class="pill" id="dhFolderBtn">Open folder</button>
+          <button class="pill primary" id="dhDownloadBtn">Download</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Post reader -->
+    <div class="overlay hidden" id="postOverlay">
+      <div class="dialog post-dialog">
+        <div class="dialog-head">
+          <div>
+            <div class="post-date" id="postDate"></div>
+            <h2 id="postTitle"></h2>
+          </div>
+          <button class="icon-btn" data-close><svg viewBox="0 0 24 24"><path d="M7 7l10 10M17 7L7 17" stroke="currentColor" stroke-width="1.8"/></svg></button>
+        </div>
+        <div class="post-body" id="postBody"></div>
+      </div>
+    </div>
+
+    <div class="toast hidden" id="toast"></div>
+
+    <!-- Launcher update ready (found in the background) -->
+    <div class="update-pop hidden" id="updatePop" role="status">
+      <img src="icon.png" alt="">
+      <span id="updatePopText">Update ready</span>
+      <button class="pill primary" id="updateRestart">Restart</button>
+      <button class="icon-btn" id="updateLater" title="Later"><svg viewBox="0 0 24 24"><path d="M7 7l10 10M17 7L7 17" stroke="currentColor" stroke-width="1.8"/></svg></button>
+    </div>
+
+    <!-- Shown for a moment while the launcher starts -->
+    <div class="splash" id="splash">
+      <img class="splash-icon" src="icon.png" alt="">
+      <div class="spinner"></div>
+    </div>
+  </div>
+  <script src="icons.js"></script>
+  <script src="app.js"></script>
+  <script src="distant-horizons.js"></script>
+</body>
+</html>

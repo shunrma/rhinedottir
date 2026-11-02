@@ -1,0 +1,55 @@
+{
+  "name": "rhinedottir",
+  "productName": "Rhinedottir",
+  "version": "0.2.0",
+  "description": "Launcher for the Rhinedottir modpacks",
+  "main": "src/main/main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/*.test.js",
+    "dist": "electron-builder --win",
+    "dist:dev": "node scripts/build-dev.js"
+  },
+  "dependencies": {
+    "@xmcl/core": "2.15.1",
+    "@xmcl/installer": "6.1.2",
+    "electron-updater": "6.8.10"
+  },
+  "devDependencies": {
+    "electron": "44.7.0",
+    "electron-builder": "26.17.0"
+  },
+  "author": "shunrma",
+  "build": {
+    "appId": "com.shunrma.rhinedottir",
+    "productName": "Rhinedottir",
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "artifactName": "Rhinedottir-Setup-${version}.${ext}"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "shunrma",
+        "repo": "rhinedottir",
+        "releaseType": "release"
+      }
+    ]
+  }
+}
