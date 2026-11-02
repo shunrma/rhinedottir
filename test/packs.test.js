@@ -22,6 +22,17 @@ function fakeGitHub(files) {
     async buffer(_r, p) {
       return Buffer.from(get(p));
     },
+    async tree() {
+      const dirs = new Set();
+      for (const p of Object.keys(files)) {
+        const parts = p.split("/");
+        for (let i = 1; i < parts.length; i++) dirs.add(parts.slice(0, i).join("/"));
+      }
+      return [
+        ...[...dirs].map((p) => ({ path: p, type: "tree", sha: "d" })),
+        ...Object.keys(files).map((p) => ({ path: p, type: "blob", sha: Buffer.from(p).toString("hex") })),
+      ];
+    },
     async list(_r, dir) {
       const prefix = dir + "/";
       const names = new Set(Object.keys(files).filter((p) => p.startsWith(prefix)).map((p) => p.slice(prefix.length).split("/")[0]));
@@ -84,4 +95,20 @@ test("falls back to the cached catalog when offline", async () => {
   const { packs, offline } = await loadCatalog(broken, "x/y", cache);
   assert.equal(offline, true);
   assert.equal(packs[0].name, "Pack A");
+});
+
+test("keeps last time's images when the file list can't be fetched", async () => {
+  const cache = fs.mkdtempSync(path.join(os.tmpdir(), "cm-cat-"));
+  const gh = fakeGitHub(repo);
+  const first = await loadCatalog(gh, "x/y", cache, { latestRelease: async () => "9.9.9" });
+  gh.tree = async () => {
+    throw Object.assign(new Error("rate limited"), { status: 403 });
+  };
+  const second = await loadCatalog(gh, "x/y", cache, { latestRelease: async () => "9.9.9" });
+  const a1 = first.packs.find((p) => p.id === "a");
+  const a2 = second.packs.find((p) => p.id === "a");
+  assert.equal(second.offline, false);
+  assert.ok(a2.icon);
+  assert.deepEqual(a2.gallery, a1.gallery);
+  assert.deepEqual(a2.posts, a1.posts);
 });

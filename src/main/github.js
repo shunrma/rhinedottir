@@ -71,6 +71,10 @@ function createGitHub({ token, api = "https://api.github.com", raw = "https://ra
     async downloadAsset(repo, assetId, dest, onBytes) {
       await stream(await request(`/repos/${repo}/releases/assets/${assetId}`, "application/octet-stream"), dest, onBytes);
     },
+    // Every file in the repo (path, type, blob sha) in one API call.
+    async tree(repo) {
+      return (await (await request(`/repos/${repo}/git/trees/${ref}?recursive=1`)).json()).tree;
+    },
     async releaseByTag(repo, tag) {
       return (await request(`/repos/${repo}/releases/tags/${encodeURIComponent(tag)}`)).json();
     },

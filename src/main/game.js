@@ -129,7 +129,8 @@ async function launchGame({ minecraftDir, instanceDir, versionId, javaPath, sess
     launcherBrand: "Rhine Launcher",
     minMemory: 1024,
     maxMemory: Math.round(memoryGB * 1024),
-    extraExecOption: { detached: true },
+    // The launcher closes once the game starts, so the game must not depend on it.
+    extraExecOption: { detached: true, stdio: "ignore" },
   });
 }
 

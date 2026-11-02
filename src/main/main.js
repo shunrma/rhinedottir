@@ -260,14 +260,9 @@ function registerIpc() {
         memoryGB: settings.get("memoryGB"),
         offline: config.devMode,
       });
-      send("game-state", { packId: id, running: true });
-      let stderr = "";
-      proc.stderr?.on("data", (d) => (stderr = (stderr + d).slice(-4000)));
-      win.minimize();
-      await new Promise((resolve) => proc.on("exit", resolve).on("error", resolve));
-      send("game-state", { packId: id, running: false });
-      if (proc.exitCode) send("game-crashed", { packId: id, code: proc.exitCode, log: stderr });
-      if (!win.isDestroyed()) win.restore();
+      // The game runs on its own; the launcher closes once it has started.
+      proc.unref?.();
+      setTimeout(() => app.quit(), 1500);
       return publicPack(pack);
     }),
   );

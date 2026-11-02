@@ -18,8 +18,8 @@ async function cachedImage(gh, repo, item, cacheDir) {
   return pathToFileURL(file).href;
 }
 
-async function loadPosts(gh, repo, dir) {
-  const items = (await gh.list(repo, dir)).filter((i) => i.type === "file" && POST.test(i.name));
+async function loadPosts(gh, repo, dir, list) {
+  const items = list(dir).filter((i) => i.type === "file" && POST.test(i.name));
   items.sort((a, b) => b.name.localeCompare(a.name));
   return Promise.all(
     items.slice(0, MAX_POSTS).map(async (item) => {
@@ -29,21 +29,52 @@ async function loadPosts(gh, repo, dir) {
   );
 }
 
-async function loadPack(gh, repo, id, cacheDir, options) {
+// Lists a folder's direct children from the repo's file tree.
+function makeLister(tree) {
+  return (dir) =>
+    tree
+      .filter((i) => i.path.startsWith(dir + "/") && !i.path.slice(dir.length + 1).includes("/"))
+      .map((i) => ({ name: i.path.slice(dir.length + 1), path: i.path, type: i.type === "tree" ? "dir" : "file", sha: i.sha }));
+}
+
+async function loadPack(gh, repo, id, cacheDir, options, list, previous) {
   const base = `packs/${id}`;
-  const [pack, rootItems, galleryItems, files] = await Promise.all([
+  const [pack, files] = await Promise.all([
     gh.json(repo, `${base}/pack.json`),
-    gh.list(repo, base),
-    gh.list(repo, `${base}/gallery`),
     gh.json(repo, `${base}/files.json`).catch((err) => (err.status === 404 ? null : Promise.reject(err))),
   ]);
+  // Without the file list (GitHub's keyless limit), keep the images and posts from last time.
+  if (!list) {
+    return { ...(await packInfo(id, pack, files, options)), ...pickMedia(previous) };
+  }
+  const rootItems = list(base);
+  const galleryItems = list(`${base}/gallery`);
 
   const iconItem = rootItems.find((i) => i.name === (pack.icon || "icon.png"));
   const backgroundItem = rootItems.find((i) => i.type === "file" && /^background\.(png|jpe?g|webp)$/i.test(i.name));
   const gallery = galleryItems.filter((i) => i.type === "file" && IMAGE.test(i.name)).sort((a, b) => a.name.localeCompare(b.name));
   const posts = {};
-  for (const c of CATEGORIES) posts[c] = await loadPosts(gh, repo, `${base}/posts/${c}`);
+  for (const c of CATEGORIES) posts[c] = await loadPosts(gh, repo, `${base}/posts/${c}`, list);
 
+  return {
+    ...(await packInfo(id, pack, files, options)),
+    icon: iconItem ? await cachedImage(gh, repo, iconItem, cacheDir) : null,
+    background: backgroundItem ? await cachedImage(gh, repo, backgroundItem, cacheDir) : null,
+    gallery: await Promise.all(gallery.map((i) => cachedImage(gh, repo, i, cacheDir))),
+    posts,
+  };
+}
+
+function pickMedia(previous) {
+  return {
+    icon: previous?.icon || null,
+    background: previous?.background || null,
+    gallery: previous?.gallery || [],
+    posts: previous?.posts || {},
+  };
+}
+
+async function packInfo(id, pack, files, options) {
   // A vanilla entry has no files of its own and follows the latest Minecraft release.
   const vanilla = pack.type === "vanilla";
   let manifest = files;
@@ -62,10 +93,6 @@ async function loadPack(gh, repo, id, cacheDir, options) {
     // Latest published version, or null if the pack was never published.
     version: manifest?.version || null,
     files: manifest,
-    icon: iconItem ? await cachedImage(gh, repo, iconItem, cacheDir) : null,
-    background: backgroundItem ? await cachedImage(gh, repo, backgroundItem, cacheDir) : null,
-    gallery: await Promise.all(gallery.map((i) => cachedImage(gh, repo, i, cacheDir))),
-    posts,
     // Up to four buttons on the right. One without a url still shows, as "coming soon".
     links: (pack.links || []).slice(0, 4),
     distantHorizons: pack.distantHorizons?.levels?.length ? pack.distantHorizons : null,
@@ -80,8 +107,15 @@ async function loadCatalog(gh, repo, cacheDir, options = {}) {
   const cacheFile = path.join(cacheDir, "catalog.json");
   try {
     const { packs: ids } = await gh.json(repo, "packs.json");
+    // One API call lists every file; everything else comes from raw files, which have no limit.
+    const tree = await gh.tree(repo).catch((err) => {
+      console.warn("couldn't list the repo's files", err.message);
+      return null;
+    });
+    const list = tree ? makeLister(tree) : null;
+    const previous = new Map((readCachedCatalog(cacheDir) || []).map((p) => [p.id, p]));
     // One broken pack (or Mojang being unreachable for the vanilla entry) shouldn't hide the others.
-    const results = await Promise.allSettled(ids.map((id) => loadPack(gh, repo, id, cacheDir, options)));
+    const results = await Promise.allSettled(ids.map((id) => loadPack(gh, repo, id, cacheDir, options, list, previous.get(id))));
     const failed = results.filter((r) => r.status === "rejected");
     if (failed.length === results.length && failed.length) throw failed[0].reason;
     for (const f of failed) console.error("pack failed to load", f.reason);
