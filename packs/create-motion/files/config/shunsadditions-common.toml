@@ -1,0 +1,48 @@
+#Gameplay
+[gameplay]
+	#Adds a Bundle that holds Tools
+	toolBundles = true
+	#Turns Shulker Boxes into Sacks crafted with Leather
+	leatherPacks = true
+	#Halves the Health of Skeletons, Strays and Bogged
+	weakerSkeletons = true
+
+#Quality of life
+[qol]
+	#Sorts the Inventory with Middle Click
+	itemSorting = true
+	#Deletes the hovered Item with [DELETE]
+	deleteKey = true
+	#Lets Sacks be used like Bundles
+	quickSacks = true
+	#Moves Items quickly by holding [SHIFT] and dragging
+	shiftDragMove = true
+	#Harvests and replants Crops with Right Click
+	rightClickHarvest = true
+	#Lets you hit Enemies through Short and Tall Grass
+	hitThroughGrass = true
+	#Lets you eat Food when full
+	eatWhenFull = true
+	#Lets Players jump over Fences
+	jumpableFences = true
+	#Removes the "Too Expensive!" limit from Anvils
+	affordableBlacksmithing = true
+	#Adds the Hunger amount to Food Tooltips
+	hungerTooltip = true
+	#Lets Blazes spawn in Peaceful Mode
+	peacefulBlazes = true
+	#Lets Hunger drain in Peaceful Mode
+	peacefulHunger = true
+
+#Optional (off by default)
+[optional]
+	#Turns on Keep Inventory, but each Death costs a Heart
+	forgivingDeath = false
+	#Monsters only spawn in true darkness
+	peacefulSurface = false
+	#Adds Potion Effects to Foods and Dishes
+	foodEffects = false
+	#Adds Copper Armor, Tools and Horse Armor
+	copperArmorAndTools = false
+	#Adds Spears from 1.21.11
+	spears = false

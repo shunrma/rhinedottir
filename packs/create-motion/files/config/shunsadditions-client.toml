@@ -1,0 +1,27 @@
+#Menus
+[menus]
+	#Removes clutter from the Menus
+	minimalMenu = true
+	#Shows only the Loading Bar on a Black Screen
+	darkLoadingScreen = true
+	#Changes the Title Bar to Dark Mode
+	darkTitleBar = true
+	#Changes the Window Title to a custom one
+	windowTitle = "Minecraft"
+	#Changes the Game Logo to config/shunsadditions/logo/logo.png
+	customLogo = false
+	#Hides the Splash Text on the Logo
+	hideSplashText = true
+	#Picks which Mods show on the Mod List
+	hiddenMods = []
+	#Hides the Default Packs from the Resource Packs list
+	hideDefaultPacks = true
+	#Skips the Experimental Warning when creating a new World
+	skipExperimentalWarning = true
+
+#Resource pack support
+[resourcePacks]
+	#Compatibility with OptiGUI/OptifineGUI Texturepacks
+	guiCompat = true
+	#Compatibility with NeoContinuity/Optifine Texture Packs
+	connectedTextures = true
