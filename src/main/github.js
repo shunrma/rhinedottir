@@ -57,6 +57,12 @@ function createGitHub({ token, api = "https://api.github.com", raw = "https://ra
         return Array.isArray(items) ? items : [];
       } catch (err) {
         if (err.status === 404) return [];
+        // Without a key GitHub allows 60 API calls an hour per connection. Listing a folder
+        // only finds images and posts, so running out shouldn't stop anyone from playing.
+        if (!token && (err.status === 403 || err.status === 429)) {
+          console.warn("GitHub API limit reached; skipping", p);
+          return [];
+        }
         throw err;
       }
     },
