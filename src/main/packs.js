@@ -95,4 +95,13 @@ async function loadCatalog(gh, repo, cacheDir, options = {}) {
   }
 }
 
-module.exports = { loadCatalog };
+// The packs as they were last loaded, so the launcher can open before GitHub answers.
+function readCachedCatalog(cacheDir) {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(cacheDir, "catalog.json"), "utf8"));
+  } catch {
+    return null;
+  }
+}
+
+module.exports = { loadCatalog, readCachedCatalog };

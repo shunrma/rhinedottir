@@ -6,7 +6,7 @@ const { makePaths } = require("./paths");
 const { Settings } = require("./settings");
 const { createGitHub } = require("./github");
 const { Account } = require("./auth");
-const { loadCatalog } = require("./packs");
+const { loadCatalog, readCachedCatalog } = require("./packs");
 const { planSync, applySync, readInstalled } = require("./sync");
 const { ensureGame, launchGame, latestNeoForge, offlineProfile } = require("./game");
 const os = require("node:os");
@@ -50,7 +50,10 @@ function publicPack(pack) {
   return { ...rest, status: packStatus(pack) };
 }
 
+let lastRefresh = 0;
+
 async function refreshCatalog() {
+  lastRefresh = Date.now();
   catalog = await loadCatalog(gh, config.packsRepo, paths.cache, {
     latestRelease: async () => (await getVersionList()).latest.release,
   });
@@ -136,16 +139,32 @@ function gameStateFile(packId) {
   return path.join(paths.instance(packId), ".createmotion", "game.json");
 }
 
+// The game this pack was last set up with, if it's still on disk.
+function installedGame(pack) {
+  try {
+    const game = JSON.parse(fs.readFileSync(gameStateFile(pack.id), "utf8"));
+    const same = game.versionId === (pack.neoforge ? `neoforge-${pack.neoforge}` : pack.minecraft);
+    const present = fs.existsSync(path.join(paths.minecraft, "versions", game.versionId, `${game.versionId}.json`)) && fs.existsSync(game.javaPath);
+    return same && present ? game : null;
+  } catch {
+    return null;
+  }
+}
+
 async function installPack(pack) {
   const instanceDir = paths.instance(pack.id);
   const progress = (p) => send("progress", { packId: pack.id, ...p });
 
-  const game = await ensureGame(
-    { minecraftDir: paths.minecraft, runtimesDir: paths.runtimes, minecraft: pack.minecraft, neoforge: pack.neoforge },
-    progress,
-  );
-  fs.mkdirSync(path.dirname(gameStateFile(pack.id)), { recursive: true });
-  fs.writeFileSync(gameStateFile(pack.id), JSON.stringify(game));
+  // Minecraft, Java and NeoForge are only set up again when the pack moves to a
+  // different Minecraft or NeoForge version; a normal pack update just syncs files.
+  if (!installedGame(pack)) {
+    const game = await ensureGame(
+      { minecraftDir: paths.minecraft, runtimesDir: paths.runtimes, minecraft: pack.minecraft, neoforge: pack.neoforge },
+      progress,
+    );
+    fs.mkdirSync(path.dirname(gameStateFile(pack.id)), { recursive: true });
+    fs.writeFileSync(gameStateFile(pack.id), JSON.stringify(game));
+  }
 
   progress({ label: "Checking pack files", fraction: 0 });
   const plan = await planSync(instanceDir, pack.files, readInstalled(instanceDir));
@@ -186,6 +205,13 @@ function registerIpc() {
     settings: publicSettings(),
   }));
   handle("catalog:refresh", refreshCatalog);
+  // Last loaded packs, to show instantly while the fresh list loads.
+  handle("catalog:cached", () => {
+    const packs = readCachedCatalog(paths.cache);
+    if (!packs) return null;
+    if (!catalog.packs.length) catalog = { packs, offline: true };
+    return { packs: packs.map(publicPack), offline: false };
+  });
 
   handle("account:login", () => account.login(win));
   handle("account:logout", () => account.logout());
@@ -209,9 +235,14 @@ function registerIpc() {
 
   handle("pack:play", (id) =>
     withBusy(id, async () => {
+      // Always look for a pack update before starting, unless we just did.
+      if (Date.now() - lastRefresh > 60_000) {
+        send("progress", { packId: id, label: "Checking for updates", fraction: 1 });
+        await refreshCatalog().catch((err) => console.error("update check failed", err));
+        send("catalog", { packs: catalog.packs.map(publicPack) });
+      }
       const pack = findPack(id);
-      if (packStatus(pack).state !== "ready") await installPack(pack);
-      if (!fs.existsSync(gameStateFile(id))) await installPack(pack);
+      if (packStatus(pack).state !== "ready" || !installedGame(pack)) await installPack(pack);
       const game = JSON.parse(fs.readFileSync(gameStateFile(id), "utf8"));
       let sessionData;
       if (config.devMode) sessionData = { profile: offlineProfile(devPlayerName()), accessToken: "0" };

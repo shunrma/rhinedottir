@@ -381,6 +381,11 @@ function wire() {
     $("progressPct").textContent = `${Math.round(fraction * 100)}%`;
     $("progressFill").style.width = `${fraction * 100}%`;
   });
+  // The pack list after the update check that runs before every game start.
+  api.onCatalog((catalog) => {
+    state.packs = catalog.packs;
+    renderPack();
+  });
   api.onBusy((busy) => {
     state.busy = busy;
     if (!busy) $("progress").classList.add("hidden");
@@ -412,12 +417,15 @@ async function boot() {
     state.selected = init.settings.lastPack;
     $("launcherVersion").textContent = `Version ${init.version}`;
     renderSettings();
-    const catalog = await api.refresh();
+    // Open straight away with the packs from last time, then check GitHub for updates.
+    const cached = await api.cachedCatalog().catch(() => null);
+    const catalog = cached || (await api.refresh());
     // Load the first background (and fonts) before the window is shown.
     const pack = catalog.packs.find((p) => p.id === state.selected) || catalog.packs[0];
     const first = pack && (pack.background || pack.gallery?.[0]);
     await Promise.race([Promise.all([preload(first), document.fonts.ready]), wait(8000)]);
     applyCatalog(catalog);
+    if (cached) refreshInBackground();
   } catch (e) {
     $("packName").textContent = "Couldn't load packs";
     toast(e.message, true);
@@ -427,6 +435,17 @@ async function boot() {
   $("splash").classList.add("done", "instant");
   // Two frames so the background is painted before the window appears.
   requestAnimationFrame(() => requestAnimationFrame(() => api.ready().catch(() => {})));
+}
+
+async function refreshInBackground() {
+  try {
+    const catalog = await api.refresh();
+    applyCatalog(catalog);
+    const pack = currentPack();
+    if (pack?.status.state === "update") toast(`An update for ${pack.name} is available.`);
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));

@@ -15,6 +15,8 @@ const on = (channel) => (fn) => {
 contextBridge.exposeInMainWorld("launcher", {
   init: () => call("app:init"),
   refresh: () => call("catalog:refresh"),
+  cachedCatalog: () => call("catalog:cached"),
+  onCatalog: on("catalog"),
   login: () => call("account:login"),
   logout: () => call("account:logout"),
   setSettings: (patch) => call("settings:set", patch),
